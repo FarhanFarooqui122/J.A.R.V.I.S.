@@ -1,0 +1,15 @@
+# PyTorch is installed separately with CUDA support (see README):
+#   pip install torch --index-url https://download.pytorch.org/whl/cu126
+transformers
+accelerate
+bitsandbytes
+faster-whisper
+openwakeword
+kokoro
+soundfile
+sounddevice
+pyautogui
+pygetwindow
+numpy
+pyttsx3
+psutil

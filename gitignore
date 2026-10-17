@@ -1,0 +1,14 @@
+# Virtual environment (huge, never commit it)
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Secrets and local files
+.env
+*.log
+
+# Outputs
+outputs/
