@@ -21,6 +21,9 @@ import threading
 import urllib.request
 from pathlib import Path
 
+# Force Windows platform plugin for PySide6
+os.environ.setdefault("QT_QPA_PLATFORM", "windows")
+
 from PySide6.QtCore import Qt, QTimer, QPoint
 from PySide6.QtGui import QColor, QPainter, QPen, QBrush, QRadialGradient, QAction
 from PySide6.QtWidgets import QApplication, QWidget, QMenu
