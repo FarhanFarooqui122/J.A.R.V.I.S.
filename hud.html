@@ -1,407 +1,99 @@
 <!doctype html><html><head><meta charset="utf-8"><title>J.A.R.V.I.S</title>
 <style>
-:root{
-  --c:#00f2ff;      /* primary cyan */
-  --c2:#00b8e6;     /* secondary */
-  --dark:#03070a;   /* near black */
-  --panel:rgba(8,18,26,0.72);
-  --border:rgba(0,242,255,0.35);
-  --glow:0 0 14px rgba(0,242,255,0.25), 0 0 30px rgba(0,242,255,0.08);
-  --text:#e8fbff;
-  --muted:#6ea8b8;
-}
-* {box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--dark);color:var(--text);overflow:hidden;font-family:"Segoe UI",Rajdhani,Orbitron,Consolas,monospace}
-body::before{
-  content:"";position:fixed;inset:0;pointer-events:none;
-  background:
-    linear-gradient(rgba(0,242,255,0.04) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,242,255,0.04) 1px,transparent 1px);
-  background-size:40px 40px;
-  z-index:1;
-}
-body::after{
-  content:"";position:fixed;inset:0;pointer-events:none;
-  background:radial-gradient(circle at 50% 50%,transparent 40%,rgba(0,0,0,0.85) 90%);
-  z-index:2;
-}
-.scanlines{
-  position:fixed;inset:0;pointer-events:none;z-index:3;
-  background:linear-gradient(to bottom,rgba(255,255,255,0.02) 50%,transparent 50%);
-  background-size:100% 4px;opacity:0.5;
-}
-canvas#hud{position:fixed;inset:0;width:100%;height:100%;z-index:4}
-
-/* ---------- layout panels ---------- */
-.p{
-  position:fixed;pointer-events:none;z-index:5;
-  border:1px solid var(--border);
-  background:var(--panel);
-  backdrop-filter:blur(10px);
-  box-shadow:var(--glow), inset 0 0 20px rgba(0,242,255,0.06);
-  color:var(--text);
-}
-.p:before,.p:after{
-  content:"";position:absolute;width:16px;height:16px;border:2px solid var(--c);
-}
-.p:before{top:-2px;left:-2px;border-right:0;border-bottom:0}
-.p:after{bottom:-2px;right:-2px;border-left:0;border-top:0}
-h3{
-  margin:0 0 10px;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;
-  color:var(--c);opacity:0.85;font-weight:600;padding-bottom:6px;border-bottom:1px solid var(--border);
-}
-.val{font-variant-numeric:tabular-nums}
-
-/* top brand bar */
-#top{
-  position:fixed;top:20px;left:50%;transform:translateX(-50%);width:fit-content;z-index:6;
-  text-align:center;pointer-events:none;
-}
-#top b{
-  font-size:34px;letter-spacing:0.2em;text-shadow:var(--glow);color:var(--c);
-  display:block;margin-bottom:2px;
-}
-#top div{
-  font-size:9px;letter-spacing:0.35em;opacity:0.6;color:var(--muted);
-}
-
-/* clock top right */
-#clock{
-  position:fixed;right:30px;top:24px;font-size:20px;text-align:right;z-index:6;
-  pointer-events:none;letter-spacing:0.08em;
-}
-#clock small{display:block;font-size:10px;opacity:0.55;letter-spacing:0.2em;color:var(--muted);}
-
-/* link top far right */
-#link{
-  position:fixed;right:30px;top:64px;font-size:11px;letter-spacing:0.2em;z-index:6;
-  pointer-events:none;color:var(--muted);
-}
-#link b{color:var(--c);}
-
-/* left system panel */
-#L{
-  left:30px;top:140px;width:260px;padding:16px 18px;
-}
-.stat{margin:10px 0;display:flex;align-items:center;justify-content:space-between;font-size:11px}
-.stat small{font-size:9px;opacity:0.5}
-.stat span:first-child{color:var(--muted);width:90px}
-.gauge{
-  width:130px;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;
-  overflow:hidden;position:relative;
-}
-.gauge .fill{
-  position:absolute;left:0;top:0;height:100%;background:var(--c);width:0;
-  box-shadow:0 0 10px var(--c);border-radius:3px;transition:width 0.5s ease;
-}
-
-/* right comms panel */
-#R{
-  right:30px;top:140px;bottom:150px;width:420px;display:flex;flex-direction:column;padding:16px 18px;
-}
-#log{
-  flex:1;overflow:hidden;display:flex;flex-direction:column;gap:6px;padding-top:4px;
-}
-.row{margin:6px 0}
-.u{color:#9fb8c4}.j{color:#e8fbff}.a{color:#ffb000;font-size:10px}
-.s{opacity:0.5;font-size:10px}
-
-/* voice waveform panel */
-#W{
-  position:fixed;left:30px;right:30px;bottom:150px;height:110px;z-index:5;
-  border:1px solid var(--border);
-  background:var(--panel);
-  backdrop-filter:blur(10px);
-  box-shadow:var(--glow), inset 0 0 20px rgba(0,242,255,0.06);
-  padding:12px 16px;
-  display:flex;flex-direction:column;
-}
-#W h3{
-  margin:0 0 8px;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;
-  color:var(--c);opacity:0.85;font-weight:600;padding-bottom:6px;border-bottom:1px solid var(--border);
-}
-#waveCanvas{
-  width:100%;height:60px;background:rgba(0,0,0,0.35);border-radius:4px;
-  overflow:hidden;display:block;
-}
-
-/* bottom status bar */
-#bottom{
-  position:fixed;bottom:280px;left:50%;transform:translateX(-50%);width:600px;z-index:6;
-  text-align:center;pointer-events:none;
-}
-#statusRing{
-  display:inline-block;padding:12px 26px;border:2px solid var(--border);
-  background:rgba(8,18,26,0.6);border-radius:40px;box-shadow:var(--glow);
-}
-#sv{
-  font-size:22px;letter-spacing:0.5em;text-shadow:0 0 14px var(--c);
-  display:block;margin-bottom:4px;
-}
-#bottom small{
-  font-size:10px;letter-spacing:0.3em;opacity:0.6;color:var(--muted);display:block;
-}
-
-/* level meter */
-#levelMeter{
-  margin-top:16px;height:10px;width:100%;background:rgba(255,255,255,0.06);
-  border-radius:5px;overflow:hidden;border:1px solid var(--border);
-}
-#levelFill{
-  height:100%;width:0%;background:linear-gradient(90deg,var(--c),#00ff88);
-  box-shadow:0 0 12px var(--c);transition:width 0.05s linear;
-}
-
-/* message typing */
-.typewriter{display:inline}
-@keyframes blink{50%{opacity:0}}
-.cursor{display:inline-block;width:7px;height:1em;background:var(--c);margin-left:2px;animation:blink 1s infinite}
-
-/* corner brackets cosmetic */
-.corner{
-  position:fixed;z-index:4;pointer-events:none;border:2px solid var(--c);width:40px;height:40px;
-}
-.corner.tl{top:10px;left:10px;border-right:0;border-bottom:0}
-.corner.tr{top:10px;right:10px;border-left:0;border-bottom:0}
-.corner.bl{bottom:10px;left:10px;border-right:0;border-top:0}
-.corner.br{bottom:10px;right:10px;border-left:0;border-top:0}
-
-/* sweep glow behind panels */
-.sweep{
-  position:fixed;inset:0;z-index:3;pointer-events:none;
-  background:linear-gradient(90deg,transparent,rgba(0,242,255,0.03),transparent);
-  transform:translateX(-100%);animation:sweep 6s linear infinite;opacity:0.6;
-}
-@keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(120%)}}
-
-@keyframes pulse{
-  0%{box-shadow:0 0 0 0 rgba(0,242,255,0.4)}
-  70%{box-shadow:0 0 0 12px rgba(0,242,255,0)}
-  100%{box-shadow:0 0 0 0 rgba(0,242,255,0)}
-}
-.state-active{animation:pulse 2.5s infinite}
-</style>
-</head><body>
-<div class="scanlines"></div>
-<div class="sweep"></div>
-<canvas id="hud"></canvas>
-
-<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-
+:root{--c:rgb(0,200,255)}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#010a10;color:var(--c);overflow:hidden;font-family:Orbitron,Rajdhani,"Segoe UI",Consolas,monospace}
+body{background-image:linear-gradient(rgba(0,200,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.05) 1px,transparent 1px);background-size:44px 44px}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px),radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.8))}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+.p{position:fixed;border:1px solid color-mix(in srgb,var(--c) 30%,transparent);background:rgba(0,18,28,.45);padding:14px 16px;font-size:12px;letter-spacing:.08em}
+.p:before,.p:after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--c)}
+.p:before{top:-2px;left:-2px;border-right:0;border-bottom:0}.p:after{bottom:-2px;right:-2px;border-left:0;border-top:0}
+h3{margin:0 0 10px;font-size:11px;opacity:.7;letter-spacing:.3em;font-weight:400}
+#L{left:28px;top:96px;width:250px}#R{right:28px;top:96px;bottom:70px;width:340px;display:flex;flex-direction:column}
+#log{flex:1;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:7px}
+.u{color:#9fb8c4}.j{color:#e8fbff}.a{color:#ffb000;font-size:11px}.s{opacity:.5;font-size:11px}
+.row{margin:9px 0}.bar{height:5px;background:rgba(255,255,255,.08);margin-top:4px}.bar i{display:block;height:100%;width:0;background:var(--c);box-shadow:0 0 8px var(--c);transition:width .6s}
+#top{position:fixed;top:22px;width:100%;text-align:center}#top b{font-size:28px;letter-spacing:.5em;text-shadow:0 0 18px var(--c)}#top div{font-size:9px;letter-spacing:.4em;opacity:.55;margin-top:6px}
+#clock{position:fixed;left:30px;top:26px;font-size:20px;text-shadow:0 0 10px var(--c)}#clock small{display:block;font-size:10px;opacity:.6;letter-spacing:.2em}
+#link{position:fixed;right:30px;top:30px;font-size:11px;letter-spacing:.25em}
+#st{position:fixed;bottom:34px;width:100%;text-align:center;font-size:22px;letter-spacing:.6em;text-shadow:0 0 14px var(--c)}
+#st small{display:block;font-size:10px;letter-spacing:.3em;opacity:.5;margin-top:8px}
+</style></head><body>
+<canvas id="c"></canvas>
 <div id="top"><b>J.A.R.V.I.S</b><div>JUST A RATHER VERY INTELLIGENT SYSTEM</div></div>
-<div id="clock"><span id="t">00:00:00</span><small id="d">SUNDAY, OCTOBER 18 2026</small></div>
-<div id="link">LINK: <b id="linkState">OFFLINE</b></div>
-
-<div class="p" id="L"><h3>SYSTEM INTEGRITY</h3>
-  <div class="stat"><span>CPU</span><span id="cpuv" class="val">--</span><div class="gauge"><div class="fill" id="cpu"></div></div></div>
-  <div class="stat"><span>MEMORY</span><span id="ramv" class="val">--</span><div class="gauge"><div class="fill" id="ram"></div></div></div>
-  <div class="stat"><span>DISK C:</span><span id="diskv" class="val">--</span><div class="gauge"><div class="fill" id="disk"></div></div></div>
-  <div class="stat"><span>BATTERY</span><span id="batv" class="val">--</span><div class="gauge"><div class="fill" id="bat"></div></div></div>
-  <div class="stat"><span>UPTIME</span><span id="upv" class="val">00:00:00</span></div>
-</div>
-
+<div id="clock"><span id="t"></span><small id="d"></small></div><div id="link">LINK: ...</div>
+<div class="p" id="L"><h3>SYSTEM STATUS</h3>
+<div class="row">CPU <span id="cpuv" style="float:right">--</span><div class="bar"><i id="cpu"></i></div></div>
+<div class="row">MEMORY <span id="ramv" style="float:right">--</span><div class="bar"><i id="ram"></i></div></div>
+<div class="row">POWER <span id="batv" style="float:right">--</span><div class="bar"><i id="bat"></i></div></div>
+<div class="row s">UPTIME <span id="up" style="float:right">00:00:00</span></div></div>
 <div class="p" id="R"><h3>COMMUNICATIONS LOG</h3><div id="log"></div></div>
-
-<div class="p" id="W"><h3>VOICE WAVEFORM</h3><canvas id="waveCanvas"></canvas></div>
-
-<div id="bottom">
-  <div id="statusRing">
-    <span id="sv">STANDBY</span>
-    <small id="sub">AWAITING WAKE WORD</small>
-  </div>
-  <div id="levelMeter"><div id="levelFill"></div></div>
-</div>
-
+<div id="st"><span id="sv">STANDBY</span><small>SAY "HEY JARVIS"</small></div>
 <script>
-const $=id=>document.getElementById(id),
-      cv=$('hud'),x=cv.getContext('2d'),
-      wv=$('waveCanvas'),wx=wv.getContext('2d');
+const $=id=>document.getElementById(id),cv=$('c'),x=cv.getContext('2d');
 const COL={idle:[0,200,255],listening:[70,255,215],thinking:[255,176,0],speaking:[150,240,255],error:[255,70,70]},
-      TXT={idle:'STANDBY',listening:'LISTENING',thinking:'PROCESSING',speaking:'SPEAKING',error:'ERROR'},
-      SUB={idle:'AWAITING WAKE WORD',listening:'VOICE INPUT ACTIVE',thinking:'ANALYZING INPUT',speaking:'SYNTHESIZING RESPONSE',error:'CONNECTION ERROR'};
-let st='idle',cur=[...COL.idle],lvl=0,tgt=0,lastLv=0,W,H,t0=performance.now(),bars=new Array(72).fill(0),
-    wave=new Array(200).fill(0),waveIdx=0,
-    demo=location.protocol==='file:'||location.search.includes('demo'),
-    logEl=$('log'),msgQueue=[],typing=false,typeIdx=0,typeEl=null;
-
-function rs(){
-  const d=devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;x.setTransform(d,0,0,d,0,0);W=innerWidth;H=innerHeight;
-  resizeWave();
-}
-function resizeWave(){
-  const d=devicePixelRatio||1;
-  wv.width=wv.clientWidth*d;wv.height=wv.clientHeight*d;wx.setTransform(d,0,0,d,0,0);
-}
+ TXT={idle:'STANDBY',listening:'LISTENING',thinking:'PROCESSING',speaking:'SPEAKING',error:'ERROR'};
+let st='idle',cur=[...COL.idle],lvl=0,tgt=0,lastLv=0,W,H,t0=performance.now(),bars=new Array(72).fill(0),waveBands=[0,0,0],demo=location.protocol==='file:'||location.search.includes('demo');
+function rs(){const d=devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;x.setTransform(d,0,0,d,0,0);W=innerWidth;H=innerHeight}
 addEventListener('resize',rs);rs();
-
-function setState(s){
-  st=s;$('sv').textContent=TXT[s]||s.toUpperCase();
-  $('sub').textContent=SUB[s]||'';
-  $('sv').style.color=`rgb(${COL[s]?COL[s]:[0,200,255].join(',')})`;
-  $('statusRing').classList.toggle('state-active',s!=='idle');
-  if(s==='idle')$('statusRing').classList.remove('state-active');
-  else $('statusRing').classList.add('state-active');
-}
-function log(cls,txt,type){
-  const e=document.createElement('div');e.className=cls;
-  logEl.appendChild(e);
-  while(logEl.children.length>24)logEl.firstChild.remove();
-  if(!type){e.textContent=txt;return;}
-  let i=0;const p=txt;e.textContent='';
-  const iv=setInterval(()=>{
-    e.textContent=p.slice(0,++i);
-    if(i>=p.length){clearInterval(iv);e.textContent=p;}
-  },18);
-}
-function msg(m){
-  if(m.type=='state')setState(m.v);
-  else if(m.type=='level'){
-    tgt=m.v;lastLv=performance.now();
-    wave[waveIdx]=m.v;waveIdx=(waveIdx+1)%wave.length;
-  }
-  else if(m.type=='user')log('u','YOU › '+m.text);
-  else if(m.type=='jarvis')log('j','JARVIS › '+m.text,1);
-  else if(m.type=='action')log('a','▸ '+m.name.toUpperCase()+(m.arg?' · '+m.arg:''));
-}
-function bar(id,v){
-  if(v==null)return;
-  const el=$(id);const valEl=$(id+'v');
-  el.style.width=v+'%';
-  if(valEl)valEl.textContent=Math.round(v)+'%';
-  if(el){el.style.boxShadow=`0 0 10px var(--c)`;setTimeout(()=>el.style.boxShadow='',300)}
-}
-
-// ---------- canvas HUD drawing ----------
-function ring(r,w,a0,a1,al){
-  x.beginPath();x.arc(0,0,r,a0,a1);x.lineWidth=w;x.globalAlpha=al;x.stroke();
-}
-function cornerBracket(cx,cy,r,rot){
-  x.save();x.translate(cx,cy);x.rotate(rot);
-  x.lineWidth=2;x.strokeStyle=`rgba(0,242,255,0.5)`;
-  x.beginPath();x.moveTo(-r*0.5,-r*0.5);x.lineTo(-r*0.2,-r*0.5);x.lineTo(-r*0.2,-r*0.2);
-  x.moveTo(r*0.5,-r*0.5);x.lineTo(r*0.2,-r*0.5);x.lineTo(r*0.2,-r*0.2);
-  x.moveTo(-r*0.5,r*0.5);x.lineTo(-r*0.2,r*0.5);x.lineTo(-r*0.2,r*0.2);
-  x.moveTo(r*0.5,r*0.5);x.lineTo(r*0.2,r*0.5);x.lineTo(r*0.2,r*0.2);
-  x.stroke();x.restore();
-}
-function drawWave(){
-  const w=wv.clientWidth,h=wv.clientHeight;
-  wx.clearRect(0,0,wv.width,wv.height);
-  const c=`rgb(${cur.map(Math.round).join(',')})`;
-  wx.strokeStyle=c;wx.lineWidth=2;wx.shadowColor=c;wx.shadowBlur=10;
-  wx.beginPath();
-  const step=w/wave.length;
-  for(let i=0;i<wave.length;i++){
-    const idx=(waveIdx+i)%wave.length;
-    const x=i*step;
-    const y=h/2+(wave[idx]-0.5)*h*0.55;
-    if(i===0)wx.moveTo(x,y);else wx.lineTo(x,y);
-  }
-  wx.stroke();
-  // fill under waveform
-  const grad=wx.createLinearGradient(0,0,0,h);
-  grad.addColorStop(0,'transparent');
-  grad.addColorStop(1,`rgba(${cur.map(Math.round).join(',')},0.12)`);
-  wx.fillStyle=grad;
-  wx.beginPath();
-  wx.moveTo(0,h);
-  for(let i=0;i<wave.length;i++){
-    const idx=(waveIdx+i)%wave.length;
-    const x=i*step;
-    const y=h/2+(wave[idx]-0.5)*h*0.55;
-    wx.lineTo(x,y);
-  }
-  wx.lineTo(w,h);wx.closePath();wx.fill();
-  wx.shadowBlur=0;
-}
-
-function frame(now){
-  const t=(now-t0)/1000;
-  k=[0,1,2].map(i=>cur[i]+=(COL[st][i]-cur[i])*0.05);
-  const c=`rgb(${k.map(Math.round)})`;
-  document.documentElement.style.setProperty('--c',c);
-  if(demo){
-    const ph=Math.floor(t/4)%4;setState(['idle','listening','thinking','speaking'][ph]);
-    tgt=ph===1||ph===3?0.4+0.4*Math.sin(t*9)*Math.sin(t*3.1):0.08;lastLv=now;
-    wave[waveIdx]=tgt;waveIdx=(waveIdx+1)%wave.length;
-  }
-  if(st==='speaking'&&now-lastLv>400)tgt=0.35+0.3*Math.sin(t*11)*Math.sin(t*4.3);
-  if(now-lastLv>1500&&!demo)tgt=0;
-  lvl+=(tgt-lvl)*0.25;
-  const fast=st==='thinking'?3:1,R=Math.min(W,H)*0.26;
-  x.clearRect(0,0,W,H);x.save();x.translate(W/2,H/2);x.strokeStyle=x.fillStyle=c;
-  x.shadowColor=c;x.shadowBlur=14;x.lineCap='butt';
-
-  // outer reticle ring
-  x.globalAlpha=0.5;x.beginPath();x.arc(0,0,R*0.5,0,7);x.stroke();
-  // rotating inner sweep
-  x.save();x.rotate(-t*0.6*fast);x.setLineDash([R*0.07,R*0.05]);ring(R*0.58,3,0,7,0.7);x.restore();
-  // center crosshair
-  x.save();x.rotate(t*0.4*fast);
-  for(let i=0;i<10;i++){x.rotate(Math.PI/5);x.globalAlpha=0.8;x.fillRect(R*0.34,-R*0.045,R*0.08,R*0.09)}x.restore();
-  // center glow pulse
-  const g=x.createRadialGradient(0,0,0,0,0,R*0.4);g.addColorStop(0,'#fff');g.addColorStop(0.25,c);g.addColorStop(1,'transparent');
-  x.globalAlpha=0.9;x.fillStyle=g;x.beginPath();x.arc(0,0,R*(0.22+0.12*lvl+0.015*Math.sin(t*3)),0,7);x.fill();
-  // side brackets
-  x.save();x.rotate(t*0.3*fast);
-  for(let i=0;i<3;i++)ring(R*0.74,7,i*2.09,i*2.09+1.4,0.85);x.restore();
-  // top/bottom markers
-  x.save();x.rotate(t*0.1);
-  for(let i=0;i<120;i++){x.rotate(Math.PI/60);x.globalAlpha=0.7;x.fillRect(R*0.9,-0.5,i%5?4:10,1)}x.restore();
-  // audio bars around bottom of circle
-  for(let i=0;i<72;i++){
-    const n=0.5+0.5*Math.sin(t*5+i*1.7)*Math.cos(t*2.3+i*0.6);
-    bars[i]+=(lvl*(0.35+0.65*n)-bars[i])*0.35;
-    x.save();x.rotate(i/72*6.2832);x.globalAlpha=0.85;
-    x.fillRect(R*1.02,-1.5,6+bars[i]*R*0.45,3);x.restore();
-  }
-  // bottom sweeping arc
-  x.save();x.rotate(t*0.8*fast);
-  for(let i=0;i<24;i++){x.rotate(-0.045);x.globalAlpha=0.22*(1-i/24);x.fillRect(0,-1,R*1.35,2)}x.restore();
-  // far rings
-  x.save();x.rotate(-t*0.25);ring(R*1.42,1,0,7,0.25);
-  for(let i=0;i<3;i++){x.rotate(2.09);x.globalAlpha=0.9;x.beginPath();x.arc(R*1.42,0,4,0,7);x.fill()}x.restore();
-  x.restore();
-  drawWave();
-  requestAnimationFrame(frame);
-}
+function setState(s){st=s;$('sv').textContent=TXT[s]||s.toUpperCase()}
+function log(cls,txt,type){const e=document.createElement('div');e.className=cls;$('log').appendChild(e);
+ while($('log').children.length>30)$('log').firstChild.remove();
+ if(!type){e.textContent=txt;return}let i=0;const p=txt;const iv=setInterval(()=>{e.textContent=p.slice(0,++i);if(i>=p.length)clearInterval(iv)},16)}
+function msg(m){if(m.type=='state')setState(m.v);else if(m.type=='level'){tgt=m.v;lastLv=performance.now();if(m.bands)waveBands=m.bands}
+ else if(m.type=='user')log('u','YOU › '+m.text);else if(m.type=='jarvis')log('j','JARVIS › '+m.text,1);
+ else if(m.type=='action')log('a','▸ '+m.name.toUpperCase()+(m.arg?' · '+m.arg:''))}
+function ring(r,w,a0,a1,al){x.beginPath();x.arc(0,0,r,a0,a1);x.lineWidth=w;x.globalAlpha=al;x.stroke()}
+function frame(now){const t=(now-t0)/1000,k=[0,1,2].map(i=>cur[i]+=(COL[st][i]-cur[i])*.06),c=`rgb(${k.map(Math.round)})`;
+ document.documentElement.style.setProperty('--c',c);
+ if(demo){const ph=Math.floor(t/4)%4;setState(['idle','listening','thinking','speaking'][ph]);tgt=ph==1||ph==3?.4+.4*Math.sin(t*9)*Math.sin(t*3.1):.08;lastLv=now}
+ if(st=='speaking'&&now-lastLv>400)tgt=.35+.3*Math.sin(t*11)*Math.sin(t*4.3);
+ if(now-lastLv>1500&&!demo)tgt=0;lvl+=(tgt-lvl)*.25;
+ const fast=st=='thinking'?3:1,R=Math.min(W,H)*.27;
+ x.clearRect(0,0,W,H);x.save();x.translate(W/2,H/2);x.strokeStyle=x.fillStyle=c;x.shadowColor=c;x.shadowBlur=14;x.lineCap='butt';
+ // --- Central voice-reactive waveform (replaces center sphere) ---
+ const barCount=45,barWidth=R*0.014,barGap=R*0.010;
+ const totalWidth=barCount*(barWidth+barGap)-barGap,centerI=(barCount-1)/2;
+ let intensity=lvl;
+ if(st==='listening')intensity=Math.max(intensity,0.22+0.14*Math.sin(t*4));
+ else if(st==='idle')intensity=Math.max(intensity,0.06+0.03*Math.sin(t*2));
+ const maxHeight=R*0.50*intensity;
+ for(let i=0;i<barCount;i++){
+  const dist=Math.abs(i-centerI)/centerI;
+  const symmetry=Math.exp(-3.0*dist*dist);
+  const section=i/centerI;
+  let bandInfluence=1.0;
+  if(section<0)bandInfluence=0.65+0.7*waveBands[0];
+  else if(section>0)bandInfluence=0.65+0.7*waveBands[2];
+  else bandInfluence=0.75+0.5*waveBands[1];
+  const variation=0.65+0.7*Math.sin(t*7+i*0.45);
+  const height=maxHeight*symmetry*bandInfluence*variation;
+  const bx=-totalWidth/2+i*(barWidth+barGap),by=-height/2;
+  const cm=1-Math.abs(dist);
+  const rr=Math.round(c[0]*(0.5+0.5*cm)),gg=Math.round(c[1]),bb=Math.round(c[2]*(0.7+0.3*cm));
+  const alpha=0.45+0.55*cm*intensity;
+  x.fillStyle=`rgba(${rr},${gg},${bb},${alpha})`;
+  x.shadowColor=`rgb(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])})`;
+  x.shadowBlur=14*intensity;
+  x.fillRect(bx,by,barWidth,height);
+ }
+ x.shadowBlur=0;
+ x.save();x.rotate(t*.4*fast);for(let i=0;i<10;i++){x.rotate(Math.PI/5);x.globalAlpha=.8;x.fillRect(R*.34,-R*.045,R*.08,R*.09)}x.restore();
+ ring(R*.5,1.5,0,7,.6);x.save();x.rotate(-t*.6*fast);x.setLineDash([R*.07,R*.05]);ring(R*.58,3,0,7,.7);x.restore();
+ x.save();x.rotate(t*.3*fast);for(let i=0;i<3;i++)ring(R*.74,7,i*2.09,i*2.09+1.4,.85);x.restore();
+ x.save();x.rotate(t*.1);for(let i=0;i<120;i++){x.rotate(Math.PI/60);x.globalAlpha=.7;x.fillRect(R*.9,-.5,i%5?4:10,1)}x.restore();
+ for(let i=0;i<72;i++){const n=.5+.5*Math.sin(t*5+i*1.7)*Math.cos(t*2.3+i*.6);bars[i]+=(lvl*(.35+.65*n)-bars[i])*.35;
+  x.save();x.rotate(i/72*6.2832);x.globalAlpha=.85;x.fillRect(R*1.02,-1.5,6+bars[i]*R*.45,3);x.restore()}
+ x.save();x.rotate(t*.8*fast);for(let i=0;i<24;i++){x.rotate(-.045);x.globalAlpha=.22*(1-i/24);x.fillRect(0,-1,R*1.35,2)}x.restore();
+ x.save();x.rotate(-t*.25);ring(R*1.42,1,0,7,.25);for(let i=0;i<3;i++){x.rotate(2.09);x.globalAlpha=.9;x.beginPath();x.arc(R*1.42,0,4,0,7);x.fill()}x.restore();
+ x.restore();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
-
-// ---------- clock & uptime ----------
 const T0=Date.now(),z=n=>String(n).padStart(2,'0');
-setInterval(()=>{
-  const n=new Date;
-  $('t').textContent=z(n.getHours())+':'+z(n.getMinutes())+':'+z(n.getSeconds());
-  $('d').textContent=n.toDateString().toUpperCase();
-  const u=(Date.now()-T0)/1000|0;
-  $('upv').textContent=z(u/3600|0)+':'+z(u/60%60|0)+':'+z(u%60);
-},500);
-
-// ---------- stats polling ----------
-async function stats(){
-  try{
-    const d=await(await fetch('/stats')).json();
-    bar('cpu',d.cpu);bar('ram',d.ram);bar('bat',d.bat);
-    if(d.disk!=null)bar('disk',d.disk);
-  }catch(e){}
-}
-stats();setInterval(stats,2000);
-
-// ---------- event source ----------
-if(demo){
-  $('link').textContent='LINK: DEMO';
-  $('linkState').textContent='DEMO';$('linkState').style.color='#ffb000';
-  log('s','DEMO MODE · no live link');
-  log('u','YOU › open chrome');log('j','JARVIS › Opening Chrome, sir.',1);
-  bar('cpu',23);bar('ram',48);bar('bat',87);
-}else{
-  const es=new EventSource('/events');
-  es.onopen=()=>{$('link').textContent='LINK: ONLINE';$('linkState').textContent='ONLINE';$('linkState').style.color='#00f2ff';log('s','SYSTEM ONLINE')};
-  es.onerror=()=>{$('link').textContent='LINK: OFFLINE';$('linkState').textContent='OFFLINE';$('linkState').style.color='#ff4444'};
-  es.onmessage=e=>msg(JSON.parse(e.data));
-}
-
-// expose globals for backward compatibility
-window.setState=setState;window.log=log;window.msg=msg;window.bar=bar;window.stats=stats;
-</script>
-</body></html>
+setInterval(()=>{const n=new Date;$('t').textContent=z(n.getHours())+':'+z(n.getMinutes())+':'+z(n.getSeconds());
+ $('d').textContent=n.toDateString().toUpperCase();const u=(Date.now()-T0)/1000|0;$('up').textContent=z(u/3600|0)+':'+z(u/60%60|0)+':'+z(u%60)},500);
+function bar(id,v){if(v==null)return;$(id).style.width=v+'%';$(id+'v').textContent=Math.round(v)+'%'}
+async function stats(){try{const d=await (await fetch('/stats')).json();bar('cpu',d.cpu);bar('ram',d.ram);bar('bat',d.bat)}catch(e){}}
+if(demo){$('link').textContent='LINK: DEMO';log('s','DEMO MODE · no live link');log('u','YOU › open chrome');log('j','JARVIS › Opening Chrome, sir.');bar('cpu',23);bar('ram',48);bar('bat',87)}
+else{const es=new EventSource('/events');es.onopen=()=>{$('link').textContent='LINK: ONLINE';log('s','SYSTEM ONLINE')};
+ es.onerror=()=>$('link').textContent='LINK: OFFLINE';es.onmessage=e=>msg(JSON.parse(e.data));stats();setInterval(stats,2000)}
+</script></body></html>

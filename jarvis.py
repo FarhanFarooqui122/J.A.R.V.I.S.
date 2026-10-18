@@ -113,9 +113,32 @@ except Exception as e:
 
 
 def _pulse(a):
-    """Send the voice loudness to the HUD in 50 ms steps while Jarvis speaks."""
+    """Send the voice loudness and frequency-band energy to the HUD in 50 ms steps while Jarvis speaks."""
     for i in range(0, len(a), 1200):
-        hud.level(min(1.0, float(np.sqrt(np.mean(a[i:i + 1200] ** 2))) / 0.15))
+        chunk = a[i:i + 1200]
+        if len(chunk) == 0:
+            continue
+        rms = float(np.sqrt(np.mean(chunk ** 2)))
+        level = min(1.0, rms / 0.15)
+        # Simple frequency-band analysis from the actual speech audio (24 kHz Kokoro output)
+        try:
+            fft = np.abs(np.fft.rfft(chunk))
+            freqs = np.fft.rfftfreq(len(chunk), 1 / 24000)
+            low_mask = (freqs >= 80) & (freqs < 250)
+            mid_mask = (freqs >= 250) & (freqs < 2000)
+            high_mask = (freqs >= 2000) & (freqs < 8000)
+            low = float(np.mean(fft[low_mask])) if np.any(low_mask) else 0.0
+            mid = float(np.mean(fft[mid_mask])) if np.any(mid_mask) else 0.0
+            high = float(np.mean(fft[high_mask])) if np.any(high_mask) else 0.0
+            max_fft = max(float(np.max(fft)), 1e-10)
+            bands = [
+                min(1.0, low / max_fft * 6.0),
+                min(1.0, mid / max_fft * 6.0),
+                min(1.0, high / max_fft * 6.0),
+            ]
+        except Exception:
+            bands = [level, level, level]
+        hud.emit("level", v=round(level, 3), bands=bands)
         time.sleep(0.05)
 
 
