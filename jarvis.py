@@ -1294,10 +1294,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--text", action="store_true", help="type commands instead of using the mic")
     parser.add_argument("--no-hud", action="store_true", help="don't open the HUD window")
-    parser.add_argument("--no-orb", action="store_true", help="don't start the floating desktop orb")
     args = parser.parse_args()
-
-    orb_proc = None
 
     if not args.no_hud:
         result = hud.start()
@@ -1306,30 +1303,10 @@ if __name__ == "__main__":
         else:
             port = 8765
 
-        if not args.no_orb:
-            orb_dir = os.path.dirname(os.path.abspath(__file__))
-            try:
-                orb_proc = subprocess.Popen(
-                    [sys.executable, "orb.py", str(port)],
-                    cwd=orb_dir,
-                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                print(f"Orb started (PID {orb_proc.pid}) on port {port}")
-            except Exception as e:
-                print(f"Failed to start orb: {e}")
-                orb_proc = None
-
     try:
         text_loop() if args.text else voice_loop()
     except KeyboardInterrupt:
         print("\nBye.")
     finally:
-        if orb_proc is not None:
-            try:
-                orb_proc.terminate()
-            except Exception:
-                pass
         hud.stop()
         sys.exit(0)
