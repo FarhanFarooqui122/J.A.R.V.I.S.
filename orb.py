@@ -47,6 +47,9 @@ class JarvisOrb(QWidget):
 
         self._init_ui()
         self._start_sse_listener()
+        self.show()
+        self.activateWindow()
+        self.raise_()
 
     # ------------------------------------------------------------------ setup
 

@@ -1308,11 +1308,18 @@ if __name__ == "__main__":
 
         if not args.no_orb:
             orb_dir = os.path.dirname(os.path.abspath(__file__))
-            orb_proc = subprocess.Popen(
-                [sys.executable, "orb.py", str(port)],
-                cwd=orb_dir,
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
-            )
+            try:
+                orb_proc = subprocess.Popen(
+                    [sys.executable, "orb.py", str(port)],
+                    cwd=orb_dir,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+                print(f"Orb started (PID {orb_proc.pid}) on port {port}")
+            except Exception as e:
+                print(f"Failed to start orb: {e}")
+                orb_proc = None
 
     try:
         text_loop() if args.text else voice_loop()
