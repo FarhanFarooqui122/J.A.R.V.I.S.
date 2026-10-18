@@ -24,6 +24,7 @@ import ctypes
 import datetime
 import difflib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -1293,11 +1294,35 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--text", action="store_true", help="type commands instead of using the mic")
     parser.add_argument("--no-hud", action="store_true", help="don't open the HUD window")
+    parser.add_argument("--no-orb", action="store_true", help="don't start the floating desktop orb")
     args = parser.parse_args()
+
+    orb_proc = None
+
     if not args.no_hud:
-        hud.start()
+        result = hud.start()
+        if result:
+            _, port = result
+        else:
+            port = 8765
+
+        if not args.no_orb:
+            orb_dir = os.path.dirname(os.path.abspath(__file__))
+            orb_proc = subprocess.Popen(
+                [sys.executable, "orb.py", str(port)],
+                cwd=orb_dir,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
+            )
+
     try:
         text_loop() if args.text else voice_loop()
     except KeyboardInterrupt:
         print("\nBye.")
+    finally:
+        if orb_proc is not None:
+            try:
+                orb_proc.terminate()
+            except Exception:
+                pass
+        hud.stop()
         sys.exit(0)

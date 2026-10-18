@@ -9,6 +9,10 @@ except ImportError:
 
 PAGE = Path(__file__).with_name("hud.html")
 _clients, _lock = [], threading.Lock()
+_hud_proc = None          # subprocess.Popen for the Edge/HUD window
+_hud_port = None          # port the HUD server is listening on
+_hud_visible = False      # whether the HUD window is currently open
+_hud_srv = None           # ThreadingHTTPServer instance
 
 
 def emit(kind, **data):
@@ -34,7 +38,13 @@ class _Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        if self.path.startswith("/events"):
+        if self.path.startswith("/show"):
+            _show_hud()
+            self._send(b'{"ok":true}', "application/json")
+        elif self.path.startswith("/hide"):
+            _hide_hud()
+            self._send(b'{"ok":true}', "application/json")
+        elif self.path.startswith("/events"):
             q = queue.Queue()
             with _lock: _clients.append(q)
             self.send_response(200)
@@ -61,18 +71,60 @@ class _Handler(BaseHTTPRequestHandler):
             self._send(PAGE.read_bytes(), "text/html; charset=utf-8")
 
 
+def _show_hud():
+    global _hud_proc, _hud_visible
+    if _hud_visible:
+        return
+    url = f"http://127.0.0.1:{_hud_port}"
+    try:
+        _hud_proc = subprocess.Popen(
+            f'start "" msedge --app={url} --start-fullscreen', shell=True
+        )
+    except Exception:
+        webbrowser.open(url)
+    _hud_visible = True
+    print("HUD shown:", url)
+
+
+def _hide_hud():
+    global _hud_proc, _hud_visible
+    if not _hud_visible:
+        return
+    if _hud_proc is not None:
+        try:
+            _hud_proc.terminate()
+        except Exception:
+            pass
+        _hud_proc = None
+    _hud_visible = False
+    print("HUD hidden")
+
+
+def stop():
+    """Terminate the HUD window and stop the HTTP server."""
+    global _hud_srv
+    _hide_hud()
+    if _hud_srv is not None:
+        try:
+            _hud_srv.shutdown()
+        except Exception:
+            pass
+        _hud_srv = None
+
+
 def start(fullscreen=True):
+    global _hud_port, _hud_proc, _hud_visible, _hud_srv
     for port in range(8765, 8776):
         try:
             srv = ThreadingHTTPServer(("127.0.0.1", port), _Handler); break
         except OSError:
             continue
     else:
-        print("HUD: no free port"); return
+        print("HUD: no free port"); return None
+    _hud_port = port
+    _hud_srv = srv
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     url = f"http://127.0.0.1:{port}"
-    try:   # Edge app-mode = borderless window, press F11 to toggle fullscreen
-        subprocess.Popen(f'start "" msedge --app={url}' + (" --start-fullscreen" if fullscreen else ""), shell=True)
-    except Exception:
-        webbrowser.open(url)
+    _show_hud()
     print("HUD:", url)
+    return srv, port

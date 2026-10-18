@@ -13,3 +13,4 @@ pygetwindow
 numpy
 pyttsx3
 psutil
+PySide6
