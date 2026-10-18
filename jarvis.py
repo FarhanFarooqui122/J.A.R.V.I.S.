@@ -507,6 +507,307 @@ def reel(a):
     pyautogui.press("up" if str(a.get("direction", "next")).lower() == "previous" else "down")
 
 
+# ----------------------------- SYSTEM ACTIONS -----------------------------
+
+
+def system_power(a):
+    """Shutdown, restart, sleep, hibernate, or cancel a pending shutdown."""
+    mode = str(a.get("mode", "shutdown")).lower().strip()
+    if mode in ("shutdown", "shut down"):
+        subprocess.run("shutdown /s /t 60", shell=True, capture_output=True)
+        speak("Shutting down in 60 seconds. Say cancel shutdown to abort.")
+    elif mode in ("restart", "reboot"):
+        subprocess.run("shutdown /r /t 60", shell=True, capture_output=True)
+        speak("Restarting in 60 seconds.")
+    elif mode == "sleep":
+        subprocess.run("rundll32.exe powrprof.dll,SetSuspendState 0,1,0", shell=True, capture_output=True)
+        speak("Going to sleep.")
+    elif mode == "hibernate":
+        subprocess.run("shutdown /h", shell=True, capture_output=True)
+        speak("Hibernating.")
+    elif mode in ("cancel", "abort"):
+        subprocess.run("shutdown /a", shell=True, capture_output=True)
+        speak("Shutdown cancelled.")
+    else:
+        speak("I didn't understand that power option.")
+
+
+def empty_recycle_bin(a):
+    """Empty the Windows Recycle Bin."""
+    r = subprocess.run(
+        'powershell -Command "Clear-RecycleBin -Force -ErrorAction SilentlyContinue"',
+        shell=True,
+        capture_output=True,
+    )
+    if r.returncode == 0:
+        speak("Recycle bin emptied.")
+    else:
+        speak("I couldn't empty the recycle bin.")
+
+
+def system_info(a):
+    """Speak basic system stats: CPU, RAM, disk, battery."""
+    try:
+        import psutil
+
+        cpu = psutil.cpu_percent()
+        mem = psutil.virtual_memory().percent
+        disk = psutil.disk_usage("C:\\").percent
+        parts = [
+            f"CPU at {cpu} percent",
+            f"memory at {mem} percent",
+            f"C drive at {disk} percent",
+        ]
+        b = psutil.sensors_battery()
+        if b:
+            parts.append(
+                f"battery at {int(b.percent)} percent "
+                f"{'plugged in' if b.power_plugged else 'on battery'}"
+            )
+        speak(", ".join(parts) + ".")
+    except Exception:
+        speak("I can't read system stats right now.")
+
+
+def ip_address(a):
+    """Speak the local IP address."""
+    try:
+        import socket
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        speak(f"Your local IP address is {ip}.")
+    except Exception:
+        speak("I couldn't find your IP address.")
+
+
+# ----------------------------- WINDOW ACTIONS -----------------------------
+
+
+def window_maximize(a):
+    """Maximize the active window."""
+    w = gw.getActiveWindow()
+    if w:
+        try:
+            w.maximize()
+            speak("Maximized.")
+        except Exception:
+            speak("Couldn't maximize that window.")
+    else:
+        speak("No active window to maximize.")
+
+
+def window_restore(a):
+    """Restore (un-maximize) the active window."""
+    w = gw.getActiveWindow()
+    if w:
+        try:
+            w.restore()
+            speak("Window restored.")
+        except Exception:
+            speak("Couldn't restore that window.")
+    else:
+        speak("No active window to restore.")
+
+
+def window_snap(a):
+    """Snap active window left or right."""
+    side = str(a.get("side", "left")).lower()
+    w = gw.getActiveWindow()
+    if not w:
+        speak("No active window.")
+        return
+    if side == "left":
+        pyautogui.hotkey("win", "left")
+        speak("Snapped left.")
+    elif side == "right":
+        pyautogui.hotkey("win", "right")
+        speak("Snapped right.")
+    else:
+        speak("Say snap left or snap right.")
+
+
+def show_desktop(a):
+    """Minimize everything to show the desktop."""
+    pyautogui.hotkey("win", "d")
+    speak("Desktop showing.")
+
+
+def toggle_fullscreen(a):
+    """Toggle fullscreen in the active window (usually F11)."""
+    pyautogui.press("f11")
+    speak("Toggled fullscreen.")
+
+
+def task_view(a):
+    """Open Windows Task View."""
+    pyautogui.hotkey("win", "tab")
+    speak("Task view.")
+
+
+def action_center(a):
+    """Open Windows Action Center / notifications."""
+    pyautogui.hotkey("win", "a")
+    speak("Action center.")
+
+
+# ----------------------------- SETTINGS & TOOLS -----------------------------
+
+
+def open_settings_page(a):
+    """Open a specific Windows Settings page."""
+    page = str(a.get("page", "")).lower().strip()
+    pages = {
+        "network": "ms-settings:network",
+        "wifi": "ms-settings:network-wifi",
+        "sound": "ms-settings:sound",
+        "display": "ms-settings:display",
+        "apps": "ms-settings:appsfeatures",
+        "privacy": "ms-settings:privacy",
+        "accounts": "ms-settings:accounts",
+        "time": "ms-settings:time-language",
+        "update": "ms-settings:windowsupdate",
+        "bluetooth": "ms-settings:bluetooth",
+        "personalization": "ms-settings:personalization",
+    }
+    target = pages.get(page)
+    if not target:
+        close = difflib.get_close_matches(page, list(pages), n=1, cutoff=0.6)
+        target = pages[close[0]] if close else None
+    if target:
+        subprocess.run(f'start "" "{target}"', shell=True, capture_output=True)
+        speak(f"Opening {page} settings.")
+    else:
+        speak("I don't know that settings page.")
+
+
+def open_control_panel(a):
+    """Open Control Panel."""
+    subprocess.run("control", shell=True)
+    speak("Opening Control Panel.")
+
+
+def open_device_manager(a):
+    """Open Device Manager."""
+    subprocess.run("devmgmt.msc", shell=True)
+    speak("Opening Device Manager.")
+
+
+def open_task_manager(a):
+    """Open Task Manager."""
+    subprocess.run("taskmgr", shell=True)
+    speak("Opening Task Manager.")
+
+
+def open_command_prompt_admin(a):
+    """Open Command Prompt as administrator."""
+    subprocess.run('powershell -Command "Start-Process cmd -Verb RunAs"', shell=True)
+    speak("Opening Command Prompt as administrator.")
+
+
+# ----------------------------- CLIPBOARD & TEXT ACTIONS -----------------------------
+
+
+def clipboard_copy(a):
+    pyautogui.hotkey("ctrl", "c")
+    speak("Copied.")
+
+
+def clipboard_paste(a):
+    pyautogui.hotkey("ctrl", "v")
+    speak("Pasted.")
+
+
+def clipboard_cut(a):
+    pyautogui.hotkey("ctrl", "x")
+    speak("Cut.")
+
+
+def select_all(a):
+    pyautogui.hotkey("ctrl", "a")
+    speak("Selected all.")
+
+
+def undo(a):
+    pyautogui.hotkey("ctrl", "z")
+    speak("Undone.")
+
+
+def redo(a):
+    pyautogui.hotkey("ctrl", "y")
+    speak("Redone.")
+
+
+# ----------------------------- BROWSER ACTIONS -----------------------------
+
+
+def browser_action(a):
+    """Refresh, back, forward, zoom, bookmark, history, downloads, incognito."""
+    cmd = str(a.get("cmd", "")).lower().strip()
+    if cmd == "refresh":
+        pyautogui.hotkey("ctrl", "r")
+        speak("Refreshed.")
+    elif cmd == "back":
+        pyautogui.hotkey("alt", "left")
+        speak("Going back.")
+    elif cmd == "forward":
+        pyautogui.hotkey("alt", "right")
+        speak("Going forward.")
+    elif cmd == "zoom in":
+        pyautogui.hotkey("ctrl", "=")
+        speak("Zoomed in.")
+    elif cmd == "zoom out":
+        pyautogui.hotkey("ctrl", "-")
+        speak("Zoomed out.")
+    elif cmd == "zoom reset":
+        pyautogui.hotkey("ctrl", "0")
+        speak("Zoom reset.")
+    elif cmd == "bookmark":
+        pyautogui.hotkey("ctrl", "d")
+        speak("Bookmarked.")
+    elif cmd == "history":
+        pyautogui.hotkey("ctrl", "h")
+        speak("Opening history.")
+    elif cmd == "downloads":
+        pyautogui.hotkey("ctrl", "j")
+        speak("Opening downloads.")
+    elif cmd == "incognito":
+        pyautogui.hotkey("ctrl", "shift", "n")
+        speak("Opening incognito window.")
+    else:
+        speak("I don't know that browser command.")
+
+
+def browser_type(a):
+    """Type text into Chrome address bar (Google search) or YouTube search bar."""
+    target = str(a.get("target", "chrome")).lower().strip()
+    text = str(a.get("text", "")).strip()
+    if not text:
+        speak("What should I type?")
+        return
+    if target in ("youtube", "yt"):
+        open_url("https://www.youtube.com/results?search_query=" + urllib.parse.quote(text))
+        speak(f"Searching YouTube for {text}.")
+        return
+    # Chrome / Google address bar (omnibox)
+    w = _browser_window()
+    if w is None:
+        open_url("https://www.google.com")
+        time.sleep(1.5)
+    else:
+        focus(w)
+        time.sleep(0.3)
+        pyautogui.hotkey("ctrl", "t")   # fresh tab
+        time.sleep(0.4)
+    pyautogui.hotkey("ctrl", "l")       # focus address bar
+    time.sleep(0.4)
+    pyautogui.write(text, interval=0.02)
+    pyautogui.press("enter")
+    speak(f"Typed {text} in Chrome.")
+
+
 ACTIONS = {
     "open_app": open_app,
     "open_website": open_website,
@@ -532,6 +833,35 @@ ACTIONS = {
     "close_window": close_window,
     "minimize_all": minimize_all,
     "restore_all": restore_all,
+    # ---------------- system / power ----------------
+    "system_power": system_power,
+    "empty_recycle_bin": empty_recycle_bin,
+    "system_info": system_info,
+    "ip_address": ip_address,
+    # ---------------- window management ----------------
+    "window_maximize": window_maximize,
+    "window_restore": window_restore,
+    "window_snap": window_snap,
+    "show_desktop": show_desktop,
+    "toggle_fullscreen": toggle_fullscreen,
+    "task_view": task_view,
+    "action_center": action_center,
+    # ---------------- settings & tools ----------------
+    "open_settings_page": open_settings_page,
+    "open_control_panel": open_control_panel,
+    "open_device_manager": open_device_manager,
+    "open_task_manager": open_task_manager,
+    "open_command_prompt_admin": open_command_prompt_admin,
+    # ---------------- clipboard & text ----------------
+    "clipboard_copy": clipboard_copy,
+    "clipboard_paste": clipboard_paste,
+    "clipboard_cut": clipboard_cut,
+    "select_all": select_all,
+    "undo": undo,
+    "redo": redo,
+    # ---------------- browser ----------------
+    "browser_action": browser_action,
+    "browser_type": browser_type,
 }
 
 # ------------------------------- BRAIN ---------------------------------
@@ -564,6 +894,30 @@ Available actions:
 {"action": "new_tab"}
 {"action": "instagram", "section": "home|messages|explore|reels|notifications|profile|saved", "user": "<optional: open this person's profile>"}
 {"action": "reel", "direction": "next|previous"}
+{"action": "system_power", "mode": "shutdown|restart|sleep|hibernate|cancel"}
+{"action": "empty_recycle_bin"}
+{"action": "system_info"}
+{"action": "ip_address"}
+{"action": "window_maximize"}
+{"action": "window_restore"}
+{"action": "window_snap", "side": "left|right"}
+{"action": "show_desktop"}
+{"action": "toggle_fullscreen"}
+{"action": "task_view"}
+{"action": "action_center"}
+{"action": "open_settings_page", "page": "network|wifi|sound|display|apps|privacy|accounts|time|update|bluetooth|personalization"}
+{"action": "open_control_panel"}
+{"action": "open_device_manager"}
+{"action": "open_task_manager"}
+{"action": "open_command_prompt_admin"}
+{"action": "clipboard_copy"}
+{"action": "clipboard_paste"}
+{"action": "clipboard_cut"}
+{"action": "select_all"}
+{"action": "undo"}
+{"action": "redo"}
+{"action": "browser_action", "cmd": "refresh|back|forward|zoom in|zoom out|zoom reset|bookmark|history|downloads|incognito"}
+{"action": "browser_type", "target": "chrome|youtube|yt", "text": "<text to type>"}
 {"action": "exit"}
 
 Use close_tab/switch_tab/new_tab when the user says "tab" (browser tabs). Use close_window only for closing a whole app or window.
@@ -630,6 +984,64 @@ User: search for cricket scores
 {"say": "Searching.", "actions": [{"action": "google_search", "query": "cricket scores"}]}
 User: who are you
 {"say": "I'm Jarvis, your laptop's new best friend.", "actions": []}
+User: shut down the computer
+{"say": "Shutting down in one minute.", "actions": [{"action": "system_power", "mode": "shutdown"}]}
+User: restart now
+{"say": "Restarting shortly.", "actions": [{"action": "system_power", "mode": "restart"}]}
+User: put the pc to sleep
+{"say": "Going to sleep.", "actions": [{"action": "system_power", "mode": "sleep"}]}
+User: cancel the shutdown
+{"say": "Shutdown cancelled.", "actions": [{"action": "system_power", "mode": "cancel"}]}
+User: empty the recycle bin
+{"say": "Emptying the recycle bin.", "actions": [{"action": "empty_recycle_bin"}]}
+User: how is the system doing
+{"say": "Checking your stats.", "actions": [{"action": "system_info"}]}
+User: what is my ip address
+{"say": "Looking it up.", "actions": [{"action": "ip_address"}]}
+User: maximize this window
+{"say": "Maximizing.", "actions": [{"action": "window_maximize"}]}
+User: snap this window to the left
+{"say": "Snapping left.", "actions": [{"action": "window_snap", "side": "left"}]}
+User: show the desktop
+{"say": "Showing desktop.", "actions": [{"action": "show_desktop"}]}
+User: toggle fullscreen
+{"say": "Toggling fullscreen.", "actions": [{"action": "toggle_fullscreen"}]}
+User: open task manager
+{"say": "Opening Task Manager.", "actions": [{"action": "open_task_manager"}]}
+User: open device manager
+{"say": "Opening Device Manager.", "actions": [{"action": "open_device_manager"}]}
+User: open control panel
+{"say": "Opening Control Panel.", "actions": [{"action": "open_control_panel"}]}
+User: open wifi settings
+{"say": "Opening Wi-Fi settings.", "actions": [{"action": "open_settings_page", "page": "wifi"}]}
+User: open network settings
+{"say": "Opening network settings.", "actions": [{"action": "open_settings_page", "page": "network"}]}
+User: copy that
+{"say": "Copied.", "actions": [{"action": "clipboard_copy"}]}
+user: paste
+{"say": "Pasting.", "actions": [{"action": "clipboard_paste"}]}
+User: select all
+{"say": "Selecting all.", "actions": [{"action": "select_all"}]}
+User: undo
+{"say": "Undoing.", "actions": [{"action": "undo"}]}
+User: refresh the page
+{"say": "Refreshing.", "actions": [{"action": "browser_action", "cmd": "refresh"}]}
+User: go back
+{"say": "Going back.", "actions": [{"action": "browser_action", "cmd": "back"}]}
+User: zoom in
+{"say": "Zooming in.", "actions": [{"action": "browser_action", "cmd": "zoom in"}]}
+User: bookmark this page
+{"say": "Bookmarking.", "actions": [{"action": "browser_action", "cmd": "bookmark"}]}
+User: open task view
+{"say": "Opening Task View.", "actions": [{"action": "task_view"}]}
+User: open action center
+{"say": "Opening Action Center.", "actions": [{"action": "action_center"}]}
+User: type python tutorial in chrome
+{"say": "Typing in Chrome.", "actions": [{"action": "browser_type", "target": "chrome", "text": "python tutorial"}]}
+User: search lofi beats on youtube
+{"say": "Searching YouTube.", "actions": [{"action": "browser_type", "target": "youtube", "text": "lofi beats"}]}
+User: type weather today in chrome search bar
+{"say": "Typing in Chrome.", "actions": [{"action": "browser_type", "target": "chrome", "text": "weather today"}]}
 """
 
 
