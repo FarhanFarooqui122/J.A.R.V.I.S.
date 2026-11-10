@@ -5,3 +5,10 @@ __pycache__/
 .env
 *.log
 outputs/
+
+# editor / backup files
+*.bak
+*.orig
+*.rej
+.vscode/
+.idea/
