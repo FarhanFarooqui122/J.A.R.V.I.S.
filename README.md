@@ -53,3 +53,12 @@ python jarvis.py --no-hud   # without the HUD window
 
 ## Settings
 Everything configurable is at the top of `jarvis.py`: models, wake-word sensitivity, voice, browser, `ALWAYS_LISTEN`, `INSTAGRAM_USER`.
+
+## Troubleshooting
+| Symptom | Fix |
+| --- | --- |
+| Wake word never fires, or fires too often | Tune `WAKE_THRESHOLD` in `jarvis.py` (default `0.5` — lower is more sensitive, higher gives fewer false triggers) |
+| "4-bit load ... failed" on startup | `bitsandbytes` is missing or the GPU can't fit the model — `pip install -U bitsandbytes`. Otherwise it continues on the smaller fallback model (`Qwen2.5-1.5B-Instruct`) automatically |
+| No speech output / `espeak-ng` error | Kokoro needs [espeak-ng](https://github.com/espeak-ng/espeak-ng/releases) installed (Windows `.msi`); `pyttsx3` is the optional fallback voice |
+| Microphone hears nothing | Allow microphone access for the terminal in Windows privacy settings and make sure the right input device is the system default. Run `python jarvis.py --text` to verify the rest of the pipeline without the mic |
+| It keeps responding after a command | By design: it listens for `FOLLOWUP_SECONDS` (8 s) without the wake word — say "go to sleep" to stop |
