@@ -37,6 +37,15 @@ python jarvis.py --text     # type commands instead
 python jarvis.py --no-hud   # without the HUD window
 ```
 
+## Project layout
+| File | Purpose |
+| --- | --- |
+| `jarvis.py` | Entry point: wake word, STT, LLM prompt, action dispatch, TTS, settings |
+| `hud.py` | Serves the HUD page on localhost and streams live events to it |
+| `hud.html` | The HUD front-end (no build step, opened by `hud.py`) |
+| `requirements.txt` | Python dependencies |
+| `.gitignore` | Keeps `.venv/`, caches, logs and backups out of git |
+
 ## Adding a new ability
 1. Write a Python function that takes the action dict.
 2. Add it to the `ACTIONS` dictionary.
