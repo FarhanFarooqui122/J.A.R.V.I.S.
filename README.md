@@ -46,6 +46,12 @@ python jarvis.py --no-hud   # without the HUD window
 | `requirements.txt` | Python dependencies |
 | `.gitignore` | Keeps `.venv/`, caches, logs and backups out of git |
 
+## Safety
+- **Fixed action whitelist** — the LLM can only pick from the actions in `ACTIONS`; there is no action that runs an arbitrary shell command.
+- **Protected windows** — `close_window` refuses any window matching `PROTECTED_TITLES` (PowerShell, Command Prompt, Windows Terminal, VS Code, Jarvis itself).
+- **Elevated shell is explicit** — `open_command_prompt_admin` starts an admin Command Prompt through the normal Windows UAC prompt, so it is always visible to you.
+- **Stays on the machine** — wake word, speech-to-text, the LLM and text-to-speech all run locally; no audio or transcript is sent to a cloud API.
+
 ## Adding a new ability
 1. Write a Python function that takes the action dict.
 2. Add it to the `ACTIONS` dictionary.
