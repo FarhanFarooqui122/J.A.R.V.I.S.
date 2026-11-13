@@ -58,7 +58,23 @@ python jarvis.py --no-hud   # without the HUD window
 3. Add its line and an example to the `SYSTEM` prompt.
 
 ## Settings
-Everything configurable is at the top of `jarvis.py`: models, wake-word sensitivity, voice, browser, `ALWAYS_LISTEN`, `INSTAGRAM_USER`.
+Everything configurable is at the top of `jarvis.py`:
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `WAKE_WORD` | `hey_jarvis` | openWakeWord model that triggers listening |
+| `WAKE_THRESHOLD` | `0.5` | Wake-word sensitivity — lower is more sensitive |
+| `WHISPER_MODEL` | `small` | Speech-to-text size; `base` is faster, `small` handles accents better |
+| `LLM_MODEL` | `Qwen/Qwen2.5-3B-Instruct` | The brain, loaded in 4-bit |
+| `FALLBACK_MODEL` | `Qwen/Qwen2.5-1.5B-Instruct` | Used automatically if the 4-bit load fails |
+| `TTS_VOICE` | `bm_george` | Kokoro voice (British male; `bm_lewis`, or `am_adam` for American) |
+| `BROWSER` | `chrome` | Where searches and sites open (`msedge` for Edge) |
+| `ALWAYS_LISTEN` | `True` | Keep listening after the wake word until "go to sleep" |
+| `FOLLOWUP_SECONDS` | `8` | How long it keeps listening for a follow-up command |
+| `INSTAGRAM_USER` | `""` | Optional username to enable "my profile" / "saved posts" |
+
+Recording limits live next to them: `SILENCE_SECONDS = 1.2` (stop after this much silence) and
+`MAX_RECORD_SECONDS = 10`.
 
 ## Troubleshooting
 | Symptom | Fix |
