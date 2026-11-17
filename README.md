@@ -129,6 +129,14 @@ Everything configurable lives at the top of `jarvis.py`:
 | `INSTAGRAM_USER` | `""` | Your username, enables "my profile" and "saved posts" |
 | `BROWSER` | `chrome` | `msedge` for Edge; used for searches and sites |
 
+## HUD
+The Stark-style window is plain HTML served by `hud.py` — no extra installs beyond `psutil` (optional):
+
+- Binds `127.0.0.1` on the first free port in **8765–8775** and opens it in Edge app mode, fullscreen.
+- Streams live events over SSE at `/events`: `state` (`idle` / `listening` / `thinking` / `speaking` / `error`) plus `level` for the voice meter.
+- `/show` and `/hide` toggle the window; `python jarvis.py --no-hud` skips it entirely.
+- `psutil` only powers the CPU/RAM panel — everything else works without it.
+
 ## Safety and privacy
 
 - **Fixed action whitelist** — the LLM can only pick from `ACTIONS`; there is no arbitrary shell execution.
