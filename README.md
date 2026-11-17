@@ -180,6 +180,8 @@ The Stark-style window is plain HTML served by `hud.py` — no extra installs be
 | It keeps responding after a command | By design when `ALWAYS_LISTEN` is on — say "go to sleep" to stop |
 | HUD doesn't open | Check the port printed at startup; `hud.py` picks the first free port on `127.0.0.1` |
 | Model download is slow | First run only; models are cached under your Hugging Face cache directory |
+| "Go to my Instagram profile / saved posts" does nothing | Those two need `INSTAGRAM_USER` set; otherwise it says "Set your Instagram username in the config first." |
+| An app name isn't recognised | Add an alias to the `APPS` dict at the top of `jarvis.py` (e.g. `"notepad": "notepad"`), then restart |
 
 ## Notes
 
