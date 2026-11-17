@@ -102,6 +102,24 @@ python jarvis.py --no-hud   # without the HUD window
 | "What's my IP address?" | Answers from the system |
 | "Go to sleep" | Stops listening until the next wake word |
 
+## Supported actions
+
+48 whitelisted actions in total, grouped by what they touch:
+
+| Area | Actions |
+| --- | --- |
+| Apps, sites, folders | `open_app`, `open_website`, `google_search`, `youtube_search`, `open_folder` |
+| Typing & clipboard | `type_text`, `press_keys`, `clipboard_copy`, `clipboard_paste`, `clipboard_cut`, `select_all`, `undo`, `redo` |
+| Windows | `switch_window`, `close_window`, `minimize_all`, `restore_all`, `window_maximize`, `window_restore`, `window_snap`, `show_desktop`, `toggle_fullscreen`, `task_view` |
+| Browser tabs | `close_tab`, `switch_tab`, `reopen_tab`, `new_tab`, `browser_action`, `browser_type` |
+| Scrolling | `scroll`, `stop_scroll` |
+| Media & screen | `volume`, `media`, `screenshot`, `lock_screen`, `wait` |
+| Instagram | `instagram`, `reel` |
+| System | `system_power`, `empty_recycle_bin`, `system_info`, `ip_address`, `action_center`, `open_settings_page`, `open_control_panel`, `open_device_manager`, `open_task_manager`, `open_command_prompt_admin` |
+
+The model never calls a function directly — it emits a JSON action that has to match a key in `ACTIONS`,
+which is why a new ability is a three-step change (see "Adding a new ability").
+
 ## Project layout
 
 | File | Purpose |
