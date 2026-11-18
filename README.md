@@ -120,6 +120,26 @@ python jarvis.py --no-hud   # without the HUD window
 The model never calls a function directly — it emits a JSON action that has to match a key in `ACTIONS`,
 which is why a new ability is a three-step change (see "Adding a new ability").
 
+## Action payloads
+
+The shapes the model is allowed to send (from the `SYSTEM` prompt in `jarvis.py`):
+
+| Action | Payload |
+| --- | --- |
+| `open_app` | `{"action": "open_app", "name": "<app name>"}` |
+| `open_website` | `{"action": "open_website", "url": "<url>"}` |
+| `google_search` | `{"action": "google_search", "query": "<text>"}` |
+| `youtube_search` | `{"action": "youtube_search", "query": "<text>"}` |
+| `open_folder` | `{"action": "open_folder", "path": "<downloads\|documents\|desktop\|pictures\|music\|videos\|full path>"}` |
+| `type_text` | `{"action": "type_text", "text": "<text>", "search_box": <optional>, "enter": <optional>}` |
+| `press_keys` | `{"action": "press_keys", "keys": ["ctrl", "t"]}` |
+| `volume` | `{"action": "volume", "direction": "up\|down\|mute"}` |
+| `media` | `{"action": "media", "key": "playpause\|nexttrack\|prevtrack"}` |
+| `wait` | `{"action": "wait", "seconds": 2}` |
+| `screenshot` / `lock_screen` | `{"action": "screenshot"}` — no extra fields |
+
+Every reply also carries a `say` string, which is what gets spoken back to you.
+
 ## Project layout
 
 | File | Purpose |
