@@ -167,6 +167,20 @@ Everything configurable lives at the top of `jarvis.py`:
 | `INSTAGRAM_USER` | `""` | Your username, enables "my profile" and "saved posts" |
 | `BROWSER` | `chrome` | `msedge` for Edge; used for searches and sites |
 
+### Window names
+
+"Switch to …" and "close …" are matched against the window title, and the spoken name is first
+translated through `WINDOW_ALIASES`:
+
+| You say | Matches window |
+| --- | --- |
+| `chrome`, `browser`, `google chrome` | Chrome |
+| `vs code`, `vscode`, `code` | Visual Studio Code |
+| `explorer`, `file explorer` | File Explorer |
+| `edge`, `firefox`, `spotify`, `notepad`, `word`, `excel`, `powerpoint`, `terminal`, `settings` | Same names |
+
+Anything not in the alias table is matched as a partial/fuzzy substring of the real window title.
+
 ## HUD
 The Stark-style window is plain HTML served by `hud.py` — no extra installs beyond `psutil` (optional):
 
