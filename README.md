@@ -181,6 +181,18 @@ translated through `WINDOW_ALIASES`:
 
 Anything not in the alias table is matched as a partial/fuzzy substring of the real window title.
 
+### Scroll speed
+
+"Scroll down a little / normally / a lot" map to `SCROLL_CLICKS` and `SCROLL_DELAY`:
+
+| Amount | Wheel notches | Delay between notches |
+| --- | --- | --- |
+| `small` | 3 | 0.25 s |
+| `medium` | 8 | 0.12 s |
+| `large` | 16 | 0.05 s |
+
+"Keep scrolling" / auto-scroll runs the same notches on a background thread until `stop_scroll`.
+
 ## HUD
 The Stark-style window is plain HTML served by `hud.py` — no extra installs beyond `psutil` (optional):
 
