@@ -168,6 +168,22 @@ The shapes the model is allowed to send (from the `SYSTEM` prompt in `jarvis.py`
 
 Every reply also carries a `say` string, which is what gets spoken back to you.
 
+## How replies are handled
+
+`think()` allows 200 new tokens, takes the first `{...}` block it finds (greedy, across newlines) and parses
+it as JSON. Everything downstream trusts that one shape, so the failure modes are short:
+
+| Case | What happens |
+| --- | --- |
+| Reply has no `{...}` at all | The whole reply (first 200 characters) becomes `say`, with no actions |
+| JSON is malformed | `run_command` catches it, turns the HUD to `error` and says "Sorry, I didn't catch that properly." |
+| Unknown action name | Logged as `Unknown action:` and skipped — the remaining actions in the list still run |
+| An action raises | Logged as `Action failed:`, he says "That one failed.", and carries on with the next action |
+
+Time and date questions never reach the model: `quick_answer()` formats them from the system clock
+("It's 7:42 PM.", "Today is Friday, 20 November 2026.") — unless the sentence also contains a command verb
+like open/search/play, in which case it goes to the LLM as normal.
+
 ## Project layout
 
 | File | Purpose |
