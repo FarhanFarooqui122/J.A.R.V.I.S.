@@ -117,6 +117,19 @@ Everything up to the LLM runs locally on the CPU:
 The mic is stopped while Jarvis speaks so he cannot transcribe himself, and `--text` skips this whole
 pipeline in favour of typed commands.
 
+### Speech output
+
+`speak()` prints the line, tells the HUD it is `speaking`, then plays it:
+
+1. **Kokoro** (when installed) synthesises segment by segment; each one is played at 24 kHz and the call
+   blocks until it finishes, so long replies play in order rather than overlapping.
+2. **pyttsx3** is the fallback if Kokoro fails to import — it uses the system voice, so `TTS_VOICE`
+   (`bm_george`) has no effect there.
+
+A background thread streams loudness and frequency-band energy to the HUD while audio plays. Any playback
+error is caught, printed as `(speech failed)`, and the HUD returns to `idle` — a failed sentence never
+stops the action loop.
+
 ## Supported actions
 
 48 whitelisted actions in total, grouped by what they touch:
