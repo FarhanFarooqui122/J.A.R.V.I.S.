@@ -102,6 +102,21 @@ python jarvis.py --no-hud   # without the HUD window
 | "What's my IP address?" | Answers from the system |
 | "Go to sleep" | Stops listening until the next wake word |
 
+## Voice pipeline
+
+Everything up to the LLM runs locally on the CPU:
+
+| Stage | Detail |
+| --- | --- |
+| Wake word | openWakeWord, model `hey_jarvis` (ONNX). Triggers when the score passes `WAKE_THRESHOLD` (0.5); scores above 0.15 are printed so you can see how close it was |
+| Calibration | The first second of mic audio sets the voice threshold to `max(300, mean × 2.5)` |
+| Recording | 80 ms frames (`CHUNK = 1280` samples at 16 kHz). Speech has to start within 8 s (`FOLLOWUP_SECONDS`) when `ALWAYS_LISTEN` is on, 4 s otherwise; the recording ends after 1.2 s of quiet (`SILENCE_SECONDS`) and is capped at 10 s (`MAX_RECORD_SECONDS`) |
+| Transcription | Whisper `small`, CPU, `int8` |
+| Staying awake | `ALWAYS_LISTEN = True` keeps him taking commands after "Hey Jarvis" until a `SLEEP_PHRASES` match ("go to sleep", "stop listening", "standby", "sleep mode"); `False` falls back to the one-shot timeout |
+
+The mic is stopped while Jarvis speaks so he cannot transcribe himself, and `--text` skips this whole
+pipeline in favour of typed commands.
+
 ## Supported actions
 
 48 whitelisted actions in total, grouped by what they touch:
